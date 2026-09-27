@@ -3,6 +3,7 @@ openai_sources = files(
   'json-utils.vala',
   'chat.vala',
   'embeddings.vala',
+  'images.vala',
   'models.vala',
   'stream.vala',
   'client.vala',

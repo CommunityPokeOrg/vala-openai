@@ -57,6 +57,14 @@ private static EmbeddingResponse emb_from(string data) {
     }
 }
 
+private static ImageGenerationResponse images_from(string data) {
+    try {
+        return ImageGenerationResponse.from_data(data);
+    } catch (Openai.Error e) {
+        assert_not_reached();
+    }
+}
+
 private static ModelList models_from(string data) {
     try {
         return ModelList.from_data(data);
@@ -339,6 +347,46 @@ private static void test_embedding_base64() {
     assert(r.data[0].vector[1] == -2.5f);
 }
 
+private static void test_image_request() {
+    var req = new ImageGenerationRequest("a cat");
+    req.model = "dall-e-3";
+    req.n = 2;
+    req.size = "1792x1024";
+    req.quality = "hd";
+    req.style = "natural";
+    req.user = "user-1";
+    var obj = parse(node_str(req.to_json()));
+    assert_cmpstr(obj.get_string_member("prompt"), CompareOperator.EQ, "a cat");
+    assert_cmpstr(obj.get_string_member("model"), CompareOperator.EQ, "dall-e-3");
+    assert(obj.get_int_member("n") == 2);
+    assert_cmpstr(obj.get_string_member("size"), CompareOperator.EQ, "1792x1024");
+    assert_cmpstr(obj.get_string_member("quality"), CompareOperator.EQ, "hd");
+    assert_cmpstr(obj.get_string_member("style"), CompareOperator.EQ, "natural");
+    // URL is the API default — not serialized
+    assert(!obj.has_member("response_format"));
+
+    req.format = ImageFormat.B64_JSON;
+    var obj2 = parse(node_str(req.to_json()));
+    assert_cmpstr(obj2.get_string_member("response_format"),
+                  CompareOperator.EQ, "b64_json");
+}
+
+private static void test_image_response() {
+    var r = images_from("""
+        {"created":1727000000,
+         "data":[{"url":"https://img.test/1.png",
+                  "revised_prompt":"a nice cat"},
+                 {"b64_json":"QUJD"}]}
+        """);
+    assert(r.created == 1727000000);
+    assert_cmpint((int) r.data.length, CompareOperator.EQ, 2);
+    assert_cmpstr(r.data[0].url, CompareOperator.EQ, "https://img.test/1.png");
+    assert_cmpstr(r.data[0].revised_prompt, CompareOperator.EQ, "a nice cat");
+    assert(r.data[0].b64_json == null);
+    assert_cmpstr(r.data[1].b64_json, CompareOperator.EQ, "QUJD");
+    assert(r.data[1].url == null);
+}
+
 private static void test_model_list() {
     var l = models_from("""
         {"object":"list",
@@ -399,6 +447,8 @@ public static int main(string[] args) {
     Test.add_func("/openai/embedding/request", test_embedding_request);
     Test.add_func("/openai/embedding/response", test_embedding_response);
     Test.add_func("/openai/embedding/base64", test_embedding_base64);
+    Test.add_func("/openai/image/request", test_image_request);
+    Test.add_func("/openai/image/response", test_image_response);
     Test.add_func("/openai/models/list", test_model_list);
     Test.add_func("/openai/error/parse", test_api_error_parse);
     Test.add_func("/openai/error/malformed", test_malformed_completion);

@@ -11,6 +11,8 @@ library for Vala and the wider GObject ecosystem, built on
   JSON-mode `response_format`, seed, penalties, `stream_options` and the other
   request knobs, plus both blocking and `async` entry points.
 - **Embeddings** — `POST /embeddings`, `float` and `base64` encodings.
+- **Images** — `POST /images/generations`, URL and `b64_json` output,
+  size/quality/style controls.
 - **Models** — `GET /models` and `GET /models/{id}`.
 - **Robust errors** — every failure lands in `Openai.Error`, mapped from HTTP
   status (401 → `AUTHENTICATION`, 429 → `RATE_LIMIT`, 5xx → `SERVER`, ...);
@@ -121,6 +123,7 @@ ninja -C build docs   # output in build/docs/html/
 | `Openai.ChatCompletionStream`, `ChatCompletionChunk`, `ChatDelta` | SSE streaming |
 | `Openai.Tool`, `FunctionDefinition`, `ToolCall`, `FunctionCall` | Tool calling |
 | `Openai.EmbeddingRequest`, `EmbeddingResponse`, `Embedding` | Embeddings |
+| `Openai.ImageGenerationRequest`, `ImageGenerationResponse`, `GeneratedImage`, `ImageFormat` | Image generation |
 | `Openai.ModelList`, `ModelInfo` | Model catalog |
 | `Openai.Error`, `ApiError` | Error reporting |
 
@@ -130,7 +133,7 @@ ninja -C build docs   # output in build/docs/html/
   (images, audio) are not yet modeled.
 - Base64 embedding responses are decoded to `float[]` automatically
   (little-endian float32, per the API contract).
-- Not covered yet: audio, images, files, fine-tuning, batch, assistants
+- Not covered yet: audio, files, fine-tuning, batch, assistants
   endpoints. The `Openai.Client` plumbing (`extra_headers`, `with_session`)
   is designed to make those incremental additions easy.
 

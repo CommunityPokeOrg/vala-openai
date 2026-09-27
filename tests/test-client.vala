@@ -133,6 +133,33 @@ private static void test_create_embedding() {
                   CompareOperator.EQ, "hello");
 }
 
+private static void test_create_image() {
+    server.push_response(new MockResponse(200, """
+        {"created":1727000000,
+         "data":[{"url":"https://img.test/cat.png",
+                  "revised_prompt":"a nice cat"}]}
+        """));
+    var client = make_client();
+    ImageGenerationResponse resp;
+    try {
+        resp = client.create_image(new ImageGenerationRequest("a cat"));
+    } catch (Openai.Error e) {
+        assert_not_reached();
+    }
+    assert_cmpint((int) resp.data.length, CompareOperator.EQ, 1);
+    assert_cmpstr(resp.data[0].url, CompareOperator.EQ,
+                  "https://img.test/cat.png");
+    assert_cmpstr(resp.data[0].revised_prompt, CompareOperator.EQ,
+                  "a nice cat");
+    assert(resp.created == 1727000000);
+
+    var req = server.last_request();
+    assert_cmpstr(req.method, CompareOperator.EQ, "POST");
+    assert_cmpstr(req.path, CompareOperator.EQ, "/images/generations");
+    var sent = json_parse_test(req.body);
+    assert_cmpstr(sent.get_string_member("prompt"), CompareOperator.EQ, "a cat");
+}
+
 private static void test_error_auth() {
     server.push_response(new MockResponse(401, """
         {"error":{"message":"Incorrect API key provided",
@@ -367,6 +394,7 @@ public static int main(string[] args) {
     Test.add_func("/openai/client/chat-completion", test_chat_completion);
     Test.add_func("/openai/client/retrieve-model", test_retrieve_model);
     Test.add_func("/openai/client/create-embedding", test_create_embedding);
+    Test.add_func("/openai/client/create-image", test_create_image);
     Test.add_func("/openai/client/error-auth", test_error_auth);
     Test.add_func("/openai/client/error-rate-limit", test_error_rate_limit);
     Test.add_func("/openai/client/retry-then-success",

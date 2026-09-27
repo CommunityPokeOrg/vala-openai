@@ -8,9 +8,10 @@ namespace Openai {
     /**
      * Client for the OpenAI HTTP API (`/v1`).
      *
-     * Covers chat completions (one-shot and streamed), embeddings and the
-     * model catalog. Every operation comes in a blocking variant for use off
-     * the main thread and an `_async` variant driven by the GLib main loop.
+     * Covers chat completions (one-shot and streamed), embeddings, image
+     * generation and the model catalog. Every operation comes in a blocking
+     * variant for use off the main thread and an `_async` variant driven by
+     * the GLib main loop.
      *
      * {{{
      * var client = new Openai.Client("sk-...");
@@ -221,6 +222,26 @@ namespace Openai {
             var body = yield perform_async("POST", "/embeddings",
                                            request.to_json(), cancellable);
             return EmbeddingResponse.from_data(bytes_to_string(body));
+        }
+
+        /**
+         * Generates images (`POST /images/generations`).
+         */
+        public ImageGenerationResponse create_image(ImageGenerationRequest request,
+                                                    Cancellable? cancellable = null) throws Error {
+            var body = perform("POST", "/images/generations",
+                               request.to_json(), cancellable);
+            return ImageGenerationResponse.from_data(bytes_to_string(body));
+        }
+
+        /**
+         * Generates images, asynchronously.
+         */
+        public async ImageGenerationResponse create_image_async(ImageGenerationRequest request,
+                                                                Cancellable? cancellable = null) throws Error {
+            var body = yield perform_async("POST", "/images/generations",
+                                           request.to_json(), cancellable);
+            return ImageGenerationResponse.from_data(bytes_to_string(body));
         }
 
         private Json.Node streamed_body(ChatCompletionRequest request) {
