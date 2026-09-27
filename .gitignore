@@ -1,0 +1,17 @@
+# Meson/Ninja build trees
+/build/
+/builddir/
+/meson-private/
+/meson-logs/
+
+# Generated C/artifacts
+*.o
+*.so
+*.a
+*.vapi
+*.h
+!src/*.h
+
+# Editor noise
+*.swp
+*~

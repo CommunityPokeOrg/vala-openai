@@ -1,0 +1,4 @@
+option('tests', type : 'boolean', value : true,
+       description : 'Build and register the test suite')
+option('docs', type : 'boolean', value : false,
+       description : 'Enable the valadoc API documentation target (requires valadoc)')
